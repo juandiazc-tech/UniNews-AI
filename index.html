@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UniNews AI</title>
+  <link rel="icon" type="image/png" href="assets/images/logo-icon.png" />
+
+  <!-- Brand fonts & tokens -->
+  <link rel="stylesheet" href="css/brand.css" />
+
+  <!-- Tailwind CDN con colores de marca -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary:  '#3300FF',
+              dark:     '#000066',
+              accent:   '#00E5FF',
+              text:     '#0D0D6B',
+              surface:  '#F0F0FF',
+              border:   '#C8C8FF',
+            },
+          },
+          fontFamily: {
+            primary:   ['Montserrat', 'sans-serif'],
+            secondary: ['Nunito', 'sans-serif'],
+            accent:    ['Poppins', 'sans-serif'],
+          },
+          boxShadow: {
+            'brand-sm': '0 1px 3px rgba(51,0,255,0.12)',
+            'brand-md': '0 4px 16px rgba(51,0,255,0.18)',
+          },
+        },
+      },
+    }
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-gray-50 text-brand-text font-primary flex flex-col h-screen overflow-hidden">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header class="bg-white border-b border-brand-border px-6 py-3 flex items-center gap-4 shrink-0 z-10 shadow-brand-sm">
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-3 mr-4 shrink-0">
+      <img src="assets/images/logo-icon.png" alt="Divergency AI" class="h-8 w-auto" />
+      <span class="font-bold text-brand-dark text-sm tracking-tight hidden sm:inline">UniNews AI</span>
+    </a>
+
+    <!-- Filtros -->
+    <div class="flex items-center gap-3 flex-1 flex-wrap">
+      <select id="filter-universidad"
+              class="text-sm border border-brand-border rounded-lg px-3 py-1.5 bg-white text-brand-text font-accent focus:outline-none focus:ring-2 focus:ring-brand-primary">
+        <option value="">Todas las universidades</option>
+        <option value="Corporación Unificada Nacional">CUN</option>
+        <option value="UNAD">UNAD</option>
+        <option value="EAFIT">EAFIT</option>
+        <option value="Observatorio Universitario Colombia">Observatorio</option>
+      </select>
+
+      <select id="filter-categoria"
+              class="text-sm border border-brand-border rounded-lg px-3 py-1.5 bg-white text-brand-text font-accent focus:outline-none focus:ring-2 focus:ring-brand-primary">
+        <option value="">Todas las categorías</option>
+        <option value="Convocatoria">Convocatoria</option>
+        <option value="Investigacion">Investigación</option>
+        <option value="Tecnologia">Tecnología</option>
+        <option value="Cultura">Cultura</option>
+        <option value="Deporte">Deporte</option>
+        <option value="Institucional">Institucional</option>
+        <option value="Otro">Otro</option>
+      </select>
+
+      <select id="filter-relevancia"
+              class="text-sm border border-brand-border rounded-lg px-3 py-1.5 bg-white text-brand-text font-accent focus:outline-none focus:ring-2 focus:ring-brand-primary">
+        <option value="">Toda relevancia</option>
+        <option value="alta">Alta</option>
+        <option value="media">Media</option>
+        <option value="baja">Baja</option>
+      </select>
+
+      <span id="news-count" class="text-xs text-gray-400 ml-1">—</span>
+    </div>
+
+    <!-- Botón actualizar -->
+    <button id="btn-scrape"
+            class="flex items-center gap-2 bg-brand-primary hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors shadow-brand-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+      </svg>
+      Actualizar
+    </button>
+
+    <!-- Toggle dark/light -->
+    <button id="btn-theme"
+            title="Cambiar tema"
+            class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg border border-brand-border hover:bg-brand-surface transition-colors">
+      <svg id="icon-sun" class="w-4 h-4 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m8.66-9H21M3 12H2m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 5a7 7 0 100 14A7 7 0 0012 5z"/>
+      </svg>
+      <svg id="icon-moon" class="w-4 h-4 text-brand-primary hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- ── Main ───────────────────────────────────────────────────────────── -->
+  <main class="flex flex-1 overflow-hidden">
+
+    <!-- Columna de noticias -->
+    <div class="w-2/3 flex flex-col overflow-hidden">
+
+      <!-- Barra de búsqueda libre -->
+      <div class="search-strip px-5 pt-3 pb-2 border-b border-brand-border bg-white shrink-0 space-y-2">
+        <form id="search-form" class="flex gap-2">
+          <div class="flex-1 relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+            </svg>
+            <input id="search-input" type="text" autocomplete="off"
+                   placeholder="Busca otra universidad… ej: Javeriana, Los Andes, EAN"
+                   class="w-full pl-9 pr-3 py-2 text-sm border border-brand-border rounded-xl bg-brand-surface font-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary placeholder-gray-400" />
+          </div>
+          <button id="btn-search" type="submit"
+                  class="bg-brand-primary hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-brand-sm">
+            Buscar
+          </button>
+        </form>
+        <p id="search-error" class="hidden text-xs text-red-500 px-1"></p>
+        <div id="search-banner" class="hidden items-center justify-between bg-brand-surface border border-brand-border rounded-lg px-3 py-2">
+          <span id="search-banner-text" class="text-xs text-brand-text font-medium"></span>
+          <button id="btn-clear-search" class="text-xs text-brand-primary hover:text-brand-dark font-semibold transition-colors ml-3 shrink-0">
+            ← Volver
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel de noticias -->
+      <section id="news-panel"
+               class="flex-1 overflow-y-auto p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start">
+      </section>
+    </div>
+
+    <!-- Sidebar de chat -->
+    <aside id="chat-sidebar"
+           class="w-1/3 border-l border-brand-border bg-white flex flex-col">
+
+      <!-- Encabezado del chat -->
+      <div class="px-4 py-3 border-b border-brand-border flex items-center gap-2 shrink-0">
+        <div class="w-6 h-6 rounded-full flex items-center justify-center"
+             style="background: rgba(51,0,255,0.1);">
+          <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+          </svg>
+        </div>
+        <span class="text-sm font-semibold text-brand-dark">Chat UniNews AI</span>
+        <span class="text-xs text-gray-400 ml-1">· Groq / llama-3.3</span>
+      </div>
+
+      <!-- Quick chips -->
+      <div class="px-4 py-2 border-b border-brand-border flex flex-wrap gap-2 shrink-0">
+        <button class="chat-chip text-xs bg-brand-surface text-brand-primary border border-brand-border rounded-full px-2.5 py-1 hover:bg-brand-primary hover:text-white transition-colors"
+                data-text="¿Qué tienen en común las universidades activas?">
+          Comparar unis
+        </button>
+        <button class="chat-chip text-xs bg-brand-surface text-brand-primary border border-brand-border rounded-full px-2.5 py-1 hover:bg-brand-primary hover:text-white transition-colors"
+                data-text="¿Cuáles son las convocatorias disponibles actualmente?">
+          Convocatorias
+        </button>
+        <button class="chat-chip text-xs bg-brand-surface text-brand-primary border border-brand-border rounded-full px-2.5 py-1 hover:bg-brand-primary hover:text-white transition-colors"
+                data-text="¿Cuáles son las noticias más relevantes de hoy?">
+          Top hoy
+        </button>
+      </div>
+
+      <!-- Mensajes -->
+      <div id="chat-messages"
+           class="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
+      </div>
+
+      <!-- Input -->
+      <form id="chat-form"
+            class="px-4 py-3 border-t border-brand-border flex gap-2 shrink-0">
+        <input id="chat-input"
+               type="text"
+               placeholder="Pregunta sobre las noticias…"
+               autocomplete="off"
+               class="flex-1 text-sm border border-brand-border rounded-xl px-3 py-2 font-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary bg-brand-surface placeholder-gray-400" />
+        <button type="submit"
+                class="bg-brand-primary hover:bg-brand-dark text-white rounded-xl px-3 py-2 transition-colors flex items-center justify-center shadow-brand-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+        </button>
+      </form>
+    </aside>
+  </main>
+
+  <!-- ── Overlay de scraping ─────────────────────────────────────────────── -->
+  <div id="scrape-overlay"
+       class="hidden fixed inset-0 bg-brand-dark/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4">
+    <span class="loader"></span>
+    <div class="text-center">
+      <p class="text-white font-semibold text-sm">Scraping en progreso…</p>
+      <p class="text-white/70 text-xs mt-1">
+        Actualizando <span id="scrape-universidad">noticias</span> (30–90 s)
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Overlay de búsqueda libre ─────────────────────────────────────── -->
+  <div id="search-overlay"
+       class="hidden fixed inset-0 bg-brand-dark/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4">
+    <span class="loader"></span>
+    <div class="text-center">
+      <p class="text-white font-semibold text-sm">Investigando en internet…</p>
+      <p class="text-white/70 text-xs mt-1">Buscando en múltiples fuentes (8–15 s)</p>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

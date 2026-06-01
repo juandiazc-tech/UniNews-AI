@@ -1,0 +1,96 @@
+/* Scrollbars delgados */
+#news-panel::-webkit-scrollbar,
+#chat-messages::-webkit-scrollbar {
+  width: 4px;
+}
+#news-panel::-webkit-scrollbar-track,
+#chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+#news-panel::-webkit-scrollbar-thumb,
+#chat-messages::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 9999px;
+}
+
+/* Loader de scraping */
+.loader {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Loader de typing en chat */
+.loader-dots::before {
+  content: '···';
+  animation: dots 1.2s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0%   { content: '·'; }
+  33%  { content: '··'; }
+  66%  { content: '···'; }
+  100% { content: '·'; }
+}
+
+/* ── Dark mode overrides ─────────────────────────────────────────────────────── */
+[data-theme="dark"] body          { background-color: #0F0F1A; color: #E0E0FF; }
+[data-theme="dark"] header        { background-color: #13132B; border-color: #2D2D5E; }
+[data-theme="dark"] #chat-sidebar { background-color: #13132B; border-color: #2D2D5E; }
+[data-theme="dark"] #chat-sidebar .border-b,
+[data-theme="dark"] #chat-sidebar .border-t { border-color: #2D2D5E; }
+
+[data-theme="dark"] .news-card         { background-color: #1A1A2E; border-color: #2D2D5E; }
+[data-theme="dark"] .news-card h2      { color: #E0E0FF; }
+[data-theme="dark"] .news-card p       { color: #A0A0CC; }
+[data-theme="dark"] .news-card .border-t { border-color: #2D2D5E; }
+[data-theme="dark"] .news-card span.text-gray-400,
+[data-theme="dark"] .news-card span.text-xs { color: #8888BB; }
+
+[data-theme="dark"] select            { background-color: #1A1A2E; color: #E0E0FF; border-color: #2D2D5E; }
+[data-theme="dark"] #chat-input       { background-color: #1A1A2E; color: #E0E0FF; border-color: #2D2D5E; }
+[data-theme="dark"] #chat-input::placeholder { color: #5555AA; }
+
+[data-theme="dark"] .chat-chip        { background-color: #1A1A2E; color: #A0A0FF; border-color: #2D2D5E; }
+[data-theme="dark"] .chat-chip:hover  { background-color: var(--color-primary); color: #fff; }
+
+[data-theme="dark"] #chat-messages .bg-gray-100 { background-color: #22224A; color: #D0D0FF; }
+
+[data-theme="dark"] #scrape-overlay    { background-color: rgba(7,7,15,0.85); }
+[data-theme="dark"] #search-overlay   { background-color: rgba(7,7,15,0.85); }
+
+[data-theme="dark"] #search-input     { background-color: #1A1A2E; color: #E0E0FF; border-color: #2D2D5E; }
+[data-theme="dark"] #search-input::placeholder { color: #5555AA; }
+[data-theme="dark"] #search-banner    { background-color: #1A1A2E; border-color: #2D2D5E; }
+[data-theme="dark"] #search-banner span { color: #C0C0EE; }
+[data-theme="dark"] .search-strip     { background-color: #13132B; border-color: #2D2D5E; }
+
+/* Botón Actualizar — forzar bg porque Tailwind CDN no siempre aplica colores custom */
+#btn-scrape {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+#btn-scrape:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+/* Burbujas del usuario en chat — bg-brand-primary no se genera desde archivos .js externos */
+.chat-msg-user {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+/* line-clamp via webkit (fallback) */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

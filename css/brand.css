@@ -1,0 +1,40 @@
+/* Divergency AI — Brand Tokens */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Nunito:wght@400;600&family=Poppins:wght@400;500&display=swap');
+
+:root {
+  --color-primary:      #3300FF;
+  --color-primary-dark: #000066;
+  --color-accent:       #00E5FF;
+  --color-text:         #0D0D6B;
+  --color-text-light:   #FFFFFF;
+  --color-bg:           #FFFFFF;
+  --color-bg-dark:      #050514;
+  --color-surface:      #F0F0FF;
+  --color-border:       #C8C8FF;
+
+  --font-primary:   'Montserrat', sans-serif;
+  --font-secondary: 'Nunito', sans-serif;
+  --font-accent:    'Poppins', sans-serif;
+
+  --shadow-sm: 0 1px 3px rgba(51, 0, 255, 0.12);
+  --shadow-md: 0 4px 16px rgba(51, 0, 255, 0.18);
+  --shadow-lg: 0 8px 32px rgba(51, 0, 255, 0.24);
+}
+
+body {
+  font-family: var(--font-primary);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+[data-theme="dark"] {
+  --color-bg:           #0F0F1A;
+  --color-bg-dark:      #07070F;
+  --color-surface:      #1A1A2E;
+  --color-border:       #2D2D5E;
+  --color-text:         #E0E0FF;
+  --color-text-light:   #FFFFFF;
+  --color-primary:      #6655FF;
+  --color-primary-dark: #4433DD;
+}
