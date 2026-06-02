@@ -8,6 +8,7 @@ let searchLoading = false;
 let filters       = { universidad: '', categoria: '', relevancia: '' };
 let chatHistory   = [];
 let chatLoading   = false;
+const noticiaMap  = new Map();  // serial → objeto noticia completo para el modal
 
 // ── Colores ───────────────────────────────────────────────────────────────────
 const CATEGORY_COLORS = {
@@ -50,7 +51,11 @@ function renderCard(n) {
   const date  = formatDate(n.published_date);
 
   return `
-    <article class="news-card bg-white rounded-xl border border-brand-border p-4 flex flex-col gap-3 transition-shadow" style="box-shadow:var(--shadow-sm)" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='var(--shadow-sm)'">
+    <article data-serial="${n.serial}"
+             class="news-card bg-white rounded-xl border border-brand-border p-4 flex flex-col gap-3 transition-shadow cursor-pointer"
+             style="box-shadow:var(--shadow-sm)"
+             onmouseover="this.style.boxShadow='var(--shadow-md)'"
+             onmouseout="this.style.boxShadow='var(--shadow-sm)'">
       <div class="flex items-start justify-between gap-2">
         <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full ${badge}">
           <span class="w-1.5 h-1.5 rounded-full ${dot} inline-block"></span>
@@ -68,6 +73,7 @@ function renderCard(n) {
         <span class="text-xs text-gray-400 font-medium">${n.university_name || ''}</span>
         ${n.original_url
           ? `<a href="${n.original_url}" target="_blank" rel="noopener noreferrer"
+               onclick="event.stopPropagation()"
                class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
                Ver artículo →
              </a>`
@@ -106,7 +112,53 @@ function renderCards() {
     return;
   }
 
+  noticiaMap.clear();
+  visible.forEach(n => noticiaMap.set(String(n.serial), n));
   panel.innerHTML = visible.map(renderCard).join('');
+}
+
+// ── Modal de noticia ──────────────────────────────────────────────────────────
+function openModal(n) {
+  const badge = CATEGORY_COLORS[n.category] || CATEGORY_COLORS.Otro;
+  const dot   = RELEVANCE_DOT[n.relevance]  || 'bg-gray-300';
+
+  const badgeEl = document.getElementById('modal-badge');
+  badgeEl.className = `inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full ${badge}`;
+  badgeEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${dot} inline-block"></span>${n.category}`;
+
+  document.getElementById('modal-date').textContent       = formatDate(n.published_date);
+  document.getElementById('modal-title').textContent      = n.title        || '';
+  document.getElementById('modal-university').textContent = n.university_name || '';
+
+  const aiBlock = document.getElementById('modal-ai-block');
+  if (n.ai_resume) {
+    document.getElementById('modal-ai-resume').textContent = n.ai_resume;
+    aiBlock.classList.remove('hidden');
+  } else {
+    aiBlock.classList.add('hidden');
+  }
+
+  const resumeBlock = document.getElementById('modal-resume-block');
+  if (n.resume) {
+    document.getElementById('modal-resume').textContent = n.resume;
+    resumeBlock.classList.remove('hidden');
+  } else {
+    resumeBlock.classList.add('hidden');
+  }
+
+  const link = document.getElementById('modal-link');
+  if (n.original_url) {
+    link.href = n.original_url;
+    link.classList.remove('hidden');
+  } else {
+    link.classList.add('hidden');
+  }
+
+  document.getElementById('news-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('news-modal').classList.add('hidden');
 }
 
 // ── Carga de noticias ─────────────────────────────────────────────────────────
@@ -325,6 +377,24 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       handleChatSubmit();
     }
+  });
+
+  // Modal: abrir al hacer clic en una card
+  document.getElementById('news-panel').addEventListener('click', e => {
+    if (e.target.closest('a')) return;  // dejar que los links funcionen normalmente
+    const card = e.target.closest('[data-serial]');
+    if (!card) return;
+    const n = noticiaMap.get(card.dataset.serial);
+    if (n) openModal(n);
+  });
+
+  // Modal: cerrar con el botón X, clic en el backdrop o tecla Escape
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('news-modal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
   });
 
   renderChat();

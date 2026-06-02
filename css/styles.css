@@ -87,6 +87,40 @@
   color: #fff;
 }
 
+/* ── Modal de noticia ────────────────────────────────────────────────────── */
+#news-modal {
+  animation: modal-fade-in 0.15s ease;
+}
+
+.news-modal-box {
+  animation: modal-scale-in 0.18s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modal-scale-in {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+.news-modal-box::-webkit-scrollbar { width: 4px; }
+.news-modal-box::-webkit-scrollbar-track { background: transparent; }
+.news-modal-box::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
+
+[data-theme="dark"] .news-modal-box           { background-color: #1A1A2E; }
+[data-theme="dark"] #modal-title              { color: #E0E0FF; }
+[data-theme="dark"] #modal-university         { color: #8888BB; }
+[data-theme="dark"] #modal-date               { color: #8888BB; }
+[data-theme="dark"] #modal-ai-block           { background-color: #13132B; border-color: #2D2D5E; }
+[data-theme="dark"] #modal-ai-resume          { color: #C0C0EE; }
+[data-theme="dark"] #modal-resume             { color: #A0A0CC; }
+[data-theme="dark"] #modal-resume-block .text-gray-400 { color: #6666AA; }
+[data-theme="dark"] #modal-box .border-t      { border-color: #2D2D5E; }
+[data-theme="dark"] #modal-close:hover        { background-color: #2D2D5E; color: #E0E0FF; }
+
 /* line-clamp via webkit (fallback) */
 .line-clamp-2 {
   display: -webkit-box;
