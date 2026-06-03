@@ -5,37 +5,42 @@ let allNoticias   = [];
 let searchResults = null;   // null = modo normal; array = resultados de /uninews-search
 let searchMeta    = null;   // { universidad, total }
 let searchLoading = false;
-let filters       = { universidad: '', categoria: '', relevancia: '' };
+let filters       = { categoria: '', universidad: '', keyword: '' };
 let chatHistory   = [];
 let chatLoading   = false;
-const noticiaMap  = new Map();  // serial → objeto noticia completo para el modal
+const noticiaMap  = new Map();
 
-// ── Colores ───────────────────────────────────────────────────────────────────
+// ── Colores (hex exactos según guía de producción) ────────────────────────
 const CATEGORY_COLORS = {
-  Convocatoria:  'bg-brand-surface text-brand-primary',
-  Investigacion: 'bg-green-100 text-green-800',
-  Tecnologia:    'bg-orange-100 text-orange-800',
-  Cultura:       'bg-red-100 text-red-800',
-  Deporte:       'bg-gray-100 text-gray-700',
-  Institucional: 'bg-purple-100 text-purple-800',
-  Otro:          'bg-gray-100 text-gray-500',
+  Convocatoria:  { bg: '#DBEAFE', text: '#1D4ED8' },
+  Investigacion: { bg: '#DCFCE7', text: '#15803D' },
+  Tecnologia:    { bg: '#FEF3C7', text: '#B45309' },
+  Cultura:       { bg: '#FEE2E2', text: '#DC2626' },
+  Deporte:       { bg: '#F1F5F9', text: '#475569' },
+  Institucional: { bg: '#F3E8FF', text: '#7E22CE' },
+  Obituario:     { bg: '#F1F5F9', text: '#475569' },
+  'Política':    { bg: '#FEF3C7', text: '#B45309' },
+  Otro:          { bg: '#F8FAFC', text: '#94A3B8' },
 };
 
-const RELEVANCE_DOT = {
-  alta:  'bg-green-500',
-  media: 'bg-yellow-400',
-  baja:  'bg-red-400',
+const RELEVANCE = {
+  alta:  { color: '#22C55E', label: 'Alta' },
+  media: { color: '#F59E0B', label: 'Media' },
+  baja:  { color: '#94A3B8', label: 'Baja' },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getVisibleNoticias() {
   const source = searchResults !== null ? searchResults : allNoticias;
-  return source.filter(n => {
-    const matchU = searchResults !== null || !filters.universidad || n.university_name === filters.universidad;
-    const matchC = !filters.categoria || n.category  === filters.categoria;
-    const matchR = !filters.relevancia || n.relevance === filters.relevancia;
-    return matchU && matchC && matchR;
-  });
+  const kw = filters.keyword.trim().toLowerCase();
+  const applyUniFilter = searchResults === null;
+  return source.filter(n =>
+    (!filters.categoria   || n.category        === filters.categoria) &&
+    (!applyUniFilter || !filters.universidad || n.university_name === filters.universidad) &&
+    (!kw || [n.title, n.ai_resume, n.resume, n.university_name].some(
+      t => (t || '').toLowerCase().includes(kw)
+    ))
+  );
 }
 
 function formatDate(dateStr) {
@@ -45,40 +50,49 @@ function formatDate(dateStr) {
 }
 
 // ── Renderizado de cards ──────────────────────────────────────────────────────
+function cardId(n) {
+  return n.original_url || n.title || '';
+}
+
 function renderCard(n) {
-  const badge = CATEGORY_COLORS[n.category] || CATEGORY_COLORS.Otro;
-  const dot   = RELEVANCE_DOT[n.relevance]  || 'bg-gray-300';
-  const date  = formatDate(n.published_date);
+  const cat  = CATEGORY_COLORS[n.category] || CATEGORY_COLORS.Otro;
+  const rel  = RELEVANCE[n.relevance]      || RELEVANCE.baja;
+  const date = formatDate(n.published_date);
+  const uni  = n.university_name || '';
 
   return `
-    <article data-serial="${n.serial}"
-             class="news-card bg-white rounded-xl border border-brand-border p-4 flex flex-col gap-3 transition-shadow cursor-pointer"
+    <article data-id="${cardId(n).replace(/"/g, '&quot;')}"
+             class="news-card bg-white rounded-xl border border-brand-border p-4 flex flex-col gap-2.5 transition-shadow cursor-pointer"
              style="box-shadow:var(--shadow-sm)"
              onmouseover="this.style.boxShadow='var(--shadow-md)'"
              onmouseout="this.style.boxShadow='var(--shadow-sm)'">
-      <div class="flex items-start justify-between gap-2">
-        <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full ${badge}">
-          <span class="w-1.5 h-1.5 rounded-full ${dot} inline-block"></span>
-          ${n.category}
-        </span>
-        <span class="text-xs text-gray-400 shrink-0">${date}</span>
+
+      <!-- Fila 1: badge categoría + relevancia -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs font-medium px-2.5 py-0.5 rounded-full"
+              style="background:${cat.bg};color:${cat.text}">${n.category}</span>
+        <span class="text-xs font-medium" style="color:${rel.color}">● ${rel.label}</span>
       </div>
 
-      <div>
-        <h2 class="text-sm font-semibold text-gray-800 leading-snug line-clamp-2">${n.title}</h2>
-        <p class="mt-1 text-xs text-gray-500 line-clamp-2">${n.ai_resume || ''}</p>
-      </div>
+      <!-- Título -->
+      <h2 class="text-sm font-semibold text-gray-800 leading-snug line-clamp-2">${n.title}</h2>
 
-      <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
-        <span class="text-xs text-gray-400 font-medium">${n.university_name || ''}</span>
-        ${n.original_url
-          ? `<a href="${n.original_url}" target="_blank" rel="noopener noreferrer"
-               onclick="event.stopPropagation()"
-               class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
+      <!-- Universidad · Fecha -->
+      <p class="text-xs text-gray-400">${uni}${uni && date ? ' · ' : ''}${date}</p>
+
+      <!-- Resumen IA -->
+      ${n.ai_resume ? `<p class="text-xs text-gray-500 line-clamp-2">${n.ai_resume}</p>` : ''}
+
+      <!-- Ver artículo -->
+      ${n.original_url
+        ? `<div class="flex justify-end mt-auto pt-1">
+             <a href="${n.original_url}" target="_blank" rel="noopener noreferrer"
+                onclick="event.stopPropagation()"
+                class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
                Ver artículo →
-             </a>`
-          : ''}
-      </div>
+             </a>
+           </div>`
+        : ''}
     </article>`;
 }
 
@@ -113,18 +127,23 @@ function renderCards() {
   }
 
   noticiaMap.clear();
-  visible.forEach(n => noticiaMap.set(String(n.serial), n));
+  visible.forEach(n => noticiaMap.set(cardId(n), n));
   panel.innerHTML = visible.map(renderCard).join('');
 }
 
 // ── Modal de noticia ──────────────────────────────────────────────────────────
 function openModal(n) {
-  const badge = CATEGORY_COLORS[n.category] || CATEGORY_COLORS.Otro;
-  const dot   = RELEVANCE_DOT[n.relevance]  || 'bg-gray-300';
+  const cat = CATEGORY_COLORS[n.category] || CATEGORY_COLORS.Otro;
+  const rel = RELEVANCE[n.relevance]      || RELEVANCE.baja;
 
   const badgeEl = document.getElementById('modal-badge');
-  badgeEl.className = `inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full ${badge}`;
-  badgeEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${dot} inline-block"></span>${n.category}`;
+  badgeEl.className = 'inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full';
+  badgeEl.style.background = cat.bg;
+  badgeEl.style.color      = cat.text;
+  badgeEl.textContent      = n.category;
+
+  const relEl = document.getElementById('modal-relevance');
+  if (relEl) { relEl.textContent = `● ${rel.label}`; relEl.style.color = rel.color; }
 
   document.getElementById('modal-date').textContent       = formatDate(n.published_date);
   document.getElementById('modal-title').textContent      = n.title        || '';
@@ -226,6 +245,9 @@ function clearSearch() {
   searchMeta    = null;
   document.getElementById('search-input').value = '';
   document.getElementById('search-error').classList.add('hidden');
+  document.getElementById('filter-keyword').value = '';
+  document.getElementById('btn-clear-keyword').classList.add('hidden');
+  filters.keyword = '';
   renderCards();
 }
 
@@ -235,12 +257,12 @@ async function handleScrape() {
   const overlay = document.getElementById('scrape-overlay');
   const label   = document.getElementById('scrape-universidad');
 
-  label.textContent = filters.universidad || 'todas las universidades';
+  label.textContent = 'todas las universidades';
   btn.disabled = true;
   overlay.classList.remove('hidden');
 
   try {
-    await triggerScrape(filters.universidad);
+    await triggerScrape('');
     await loadNoticias();
   } catch (err) {
     alert(`Error al actualizar: ${err.message}`);
@@ -251,27 +273,16 @@ async function handleScrape() {
 }
 
 // ── Filtros ───────────────────────────────────────────────────────────────────
-function handleUniversityChange() {
-  filters.universidad = document.getElementById('filter-universidad').value;
-  filters.categoria   = document.getElementById('filter-categoria').value;
-  filters.relevancia  = document.getElementById('filter-relevancia').value;
-  renderCards();
-}
-
 function handleFilterChange() {
-  filters.categoria  = document.getElementById('filter-categoria').value;
-  filters.relevancia = document.getElementById('filter-relevancia').value;
-  renderCards();  // solo re-renderiza, no re-fetch
+  filters.categoria = document.getElementById('filter-categoria').value;
+  renderCards();
 }
 
 // ── Chat ──────────────────────────────────────────────────────────────────────
 function renderChat() {
   const container = document.getElementById('chat-messages');
   if (chatHistory.length === 0) {
-    container.innerHTML = `
-      <p class="text-xs text-gray-400 text-center mt-8 px-4">
-        Pregúntame sobre las noticias de las universidades
-      </p>`;
+    container.innerHTML = '';
     return;
   }
 
@@ -354,15 +365,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-scrape').addEventListener('click', handleScrape);
   document.getElementById('search-form').addEventListener('submit', handleSearch);
   document.getElementById('btn-clear-search').addEventListener('click', clearSearch);
-  document.getElementById('filter-universidad').addEventListener('change', handleUniversityChange);
   document.getElementById('filter-categoria').addEventListener('change', handleFilterChange);
-  document.getElementById('filter-relevancia').addEventListener('change', handleFilterChange);
 
-  document.querySelectorAll('.chat-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.getElementById('chat-input').value = chip.dataset.text;
-      handleChatSubmit();
-    });
+  // Filtro de texto local
+  const filterKeyword  = document.getElementById('filter-keyword');
+  const btnClearKw     = document.getElementById('btn-clear-keyword');
+  filterKeyword.addEventListener('input', () => {
+    filters.keyword = filterKeyword.value;
+    btnClearKw.classList.toggle('hidden', !filters.keyword);
+    renderCards();
+  });
+  btnClearKw.addEventListener('click', () => {
+    filterKeyword.value = '';
+    filters.keyword = '';
+    btnClearKw.classList.add('hidden');
+    renderCards();
   });
 
   const chatForm  = document.getElementById('chat-form');
@@ -382,9 +399,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Modal: abrir al hacer clic en una card
   document.getElementById('news-panel').addEventListener('click', e => {
     if (e.target.closest('a')) return;  // dejar que los links funcionen normalmente
-    const card = e.target.closest('[data-serial]');
+    const card = e.target.closest('[data-id]');
     if (!card) return;
-    const n = noticiaMap.get(card.dataset.serial);
+    const n = noticiaMap.get(card.dataset.id);
     if (n) openModal(n);
   });
 
@@ -397,6 +414,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Escape') closeModal();
   });
 
-  renderChat();
+  // ── Tabs móvil ────────────────────────────────────────────────────────────
+  const tabNews     = document.getElementById('tab-news');
+  const tabChat     = document.getElementById('tab-chat');
+  const newsCol     = document.getElementById('news-col');
+  const chatSidebar = document.getElementById('chat-sidebar');
+
+  function setMobileTab(tab) {
+    const isNews = tab === 'news';
+    newsCol.classList.toggle('mobile-hidden', !isNews);
+    chatSidebar.classList.toggle('mobile-visible', !isNews);
+    tabNews.classList.toggle('text-brand-primary', isNews);
+    tabNews.classList.toggle('text-gray-400', !isNews);
+    tabChat.classList.toggle('text-brand-primary', !isNews);
+    tabChat.classList.toggle('text-gray-400', isNews);
+    if (!isNews) document.getElementById('chat-input')?.focus();
+  }
+
+  tabNews.addEventListener('click', () => setMobileTab('news'));
+  tabChat.addEventListener('click', () => setMobileTab('chat'));
+
   loadNoticias();
+
+  renderChat();
 });

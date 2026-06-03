@@ -42,29 +42,20 @@
   <!-- Custom styles -->
   <link rel="stylesheet" href="css/styles.css" />
 </head>
-<body class="bg-gray-50 text-brand-text font-primary flex flex-col h-screen overflow-hidden">
+<body class="bg-gray-50 text-brand-text font-primary flex flex-col overflow-hidden" style="height:100dvh;height:100vh">
 
   <!-- ── Header ─────────────────────────────────────────────────────────── -->
-  <header class="bg-white border-b border-brand-border px-6 py-3 flex items-center gap-4 shrink-0 z-10 shadow-brand-sm">
+  <header class="bg-white border-b border-brand-border px-3 sm:px-6 py-2 sm:py-3 flex items-center gap-2 sm:gap-4 shrink-0 z-10 shadow-brand-sm">
     <!-- Logo -->
-    <a href="/" class="flex items-center gap-3 mr-4 shrink-0">
-      <img src="assets/images/logo-icon.png" alt="Divergency AI" class="h-8 w-auto" />
+    <a href="/" class="flex items-center gap-2 sm:gap-3 sm:mr-4 shrink-0">
+      <img src="assets/images/logo-icon.png" alt="Divergency AI" class="h-7 sm:h-8 w-auto" />
       <span class="font-bold text-brand-dark text-sm tracking-tight hidden sm:inline">UniNews AI</span>
     </a>
 
     <!-- Filtros -->
-    <div class="flex items-center gap-3 flex-1 flex-wrap">
-      <select id="filter-universidad"
-              class="text-sm border border-brand-border rounded-lg px-3 py-1.5 bg-white text-brand-text font-accent focus:outline-none focus:ring-2 focus:ring-brand-primary">
-        <option value="">Todas las universidades</option>
-        <option value="Corporación Unificada Nacional">CUN</option>
-        <option value="UNAD">UNAD</option>
-        <option value="EAFIT">EAFIT</option>
-        <option value="Observatorio Universitario Colombia">Observatorio</option>
-      </select>
-
+    <div class="flex items-center gap-2 sm:gap-3 flex-1 flex-wrap min-w-0">
       <select id="filter-categoria"
-              class="text-sm border border-brand-border rounded-lg px-3 py-1.5 bg-white text-brand-text font-accent focus:outline-none focus:ring-2 focus:ring-brand-primary">
+              class="text-xs sm:text-sm border border-brand-border rounded-lg px-2 sm:px-3 py-1.5 bg-white text-brand-text font-accent focus:outline-none focus:ring-2 focus:ring-brand-primary">
         <option value="">Todas las categorías</option>
         <option value="Convocatoria">Convocatoria</option>
         <option value="Investigacion">Investigación</option>
@@ -75,25 +66,17 @@
         <option value="Otro">Otro</option>
       </select>
 
-      <select id="filter-relevancia"
-              class="text-sm border border-brand-border rounded-lg px-3 py-1.5 bg-white text-brand-text font-accent focus:outline-none focus:ring-2 focus:ring-brand-primary">
-        <option value="">Toda relevancia</option>
-        <option value="alta">Alta</option>
-        <option value="media">Media</option>
-        <option value="baja">Baja</option>
-      </select>
-
-      <span id="news-count" class="text-xs text-gray-400 ml-1">—</span>
+      <span id="news-count" class="text-xs text-gray-400 hidden sm:inline">—</span>
     </div>
 
     <!-- Botón actualizar -->
     <button id="btn-scrape"
-            class="flex items-center gap-2 bg-brand-primary hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors shadow-brand-sm">
+            class="flex items-center gap-1.5 sm:gap-2 bg-brand-primary hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-1.5 rounded-lg transition-colors shadow-brand-sm shrink-0">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
       </svg>
-      Actualizar
+      <span class="hidden sm:inline">Actualizar</span>
     </button>
 
     <!-- Toggle dark/light -->
@@ -112,13 +95,13 @@
   </header>
 
   <!-- ── Main ───────────────────────────────────────────────────────────── -->
-  <main class="flex flex-1 overflow-hidden">
+  <main class="flex flex-1 overflow-hidden relative">
 
     <!-- Columna de noticias -->
-    <div class="w-2/3 flex flex-col overflow-hidden">
+    <div id="news-col" class="flex flex-col overflow-hidden">
 
       <!-- Barra de búsqueda libre -->
-      <div class="search-strip px-5 pt-3 pb-2 border-b border-brand-border bg-white shrink-0 space-y-2">
+      <div class="search-strip px-3 sm:px-5 pt-3 pb-2 border-b border-brand-border bg-white shrink-0 space-y-2">
         <form id="search-form" class="flex gap-2">
           <div class="flex-1 relative">
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
@@ -142,20 +125,38 @@
             ← Volver
           </button>
         </div>
+
+        <!-- Filtro de texto local -->
+        <div class="relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 010 2H4a1 1 0 01-1-1zM5 9h14M7 14h10M9 19h6"/>
+          </svg>
+          <input id="filter-keyword" type="text" autocomplete="off"
+                 placeholder="Filtrar en estas noticias… ej: UNAL, investigación, Javeriana"
+                 class="w-full pl-8 pr-8 py-1.5 text-xs border border-brand-border rounded-lg bg-white font-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary placeholder-gray-400" />
+          <button id="btn-clear-keyword"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 hidden text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Panel de noticias -->
       <section id="news-panel"
-               class="flex-1 overflow-y-auto p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start">
+               class="flex-1 overflow-y-auto p-3 sm:p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 content-start">
       </section>
     </div>
 
     <!-- Sidebar de chat -->
     <aside id="chat-sidebar"
-           class="w-1/3 border-l border-brand-border bg-white flex flex-col">
+           class="border-l border-brand-border bg-white flex flex-col">
 
       <!-- Encabezado del chat -->
-      <div class="px-4 py-3 border-b border-brand-border flex items-center gap-2 shrink-0">
+      <div class="px-3 sm:px-4 py-3 border-b border-brand-border flex items-center gap-2 shrink-0">
         <div class="w-6 h-6 rounded-full flex items-center justify-center"
              style="background: rgba(51,0,255,0.1);">
           <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,34 +164,21 @@
                   d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
           </svg>
         </div>
-        <span class="text-sm font-semibold text-brand-dark">Chat UniNews AI</span>
-        <span class="text-xs text-gray-400 ml-1">· Groq / llama-3.3</span>
-      </div>
-
-      <!-- Quick chips -->
-      <div class="px-4 py-2 border-b border-brand-border flex flex-wrap gap-2 shrink-0">
-        <button class="chat-chip text-xs bg-brand-surface text-brand-primary border border-brand-border rounded-full px-2.5 py-1 hover:bg-brand-primary hover:text-white transition-colors"
-                data-text="¿Qué tienen en común las universidades activas?">
-          Comparar unis
-        </button>
-        <button class="chat-chip text-xs bg-brand-surface text-brand-primary border border-brand-border rounded-full px-2.5 py-1 hover:bg-brand-primary hover:text-white transition-colors"
-                data-text="¿Cuáles son las convocatorias disponibles actualmente?">
-          Convocatorias
-        </button>
-        <button class="chat-chip text-xs bg-brand-surface text-brand-primary border border-brand-border rounded-full px-2.5 py-1 hover:bg-brand-primary hover:text-white transition-colors"
-                data-text="¿Cuáles son las noticias más relevantes de hoy?">
-          Top hoy
-        </button>
+        <div class="flex flex-col min-w-0">
+          <span class="text-sm font-semibold text-brand-dark leading-tight">Chat UniNews AI</span>
+          <span id="chat-uni-label" class="text-xs text-gray-400 hidden truncate"></span>
+        </div>
+        <span class="text-xs text-gray-400 ml-auto shrink-0">Groq / llama-3.3</span>
       </div>
 
       <!-- Mensajes -->
       <div id="chat-messages"
-           class="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
+           class="flex-1 overflow-y-auto px-3 sm:px-4 py-3 flex flex-col gap-3">
       </div>
 
       <!-- Input -->
       <form id="chat-form"
-            class="px-4 py-3 border-t border-brand-border flex gap-2 shrink-0">
+            class="px-3 sm:px-4 py-3 border-t border-brand-border flex gap-2 shrink-0">
         <input id="chat-input"
                type="text"
                placeholder="Pregunta sobre las noticias…"
@@ -209,15 +197,16 @@
 
   <!-- ── Modal de noticia ──────────────────────────────────────────────────── -->
   <div id="news-modal"
-       class="hidden fixed inset-0 bg-brand-dark/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+       class="hidden fixed inset-0 bg-brand-dark/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4"
        role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div id="modal-box"
-         class="news-modal-box bg-white w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl flex flex-col">
+         class="news-modal-box bg-white w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col">
 
       <!-- Cabecera -->
       <div class="flex items-start justify-between gap-3 px-5 pt-5 pb-3 shrink-0">
         <div class="flex items-center gap-2 flex-wrap">
-          <span id="modal-badge" class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full"></span>
+          <span id="modal-badge" class="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full"></span>
+          <span id="modal-relevance" class="text-xs font-medium"></span>
           <span id="modal-date" class="text-xs text-gray-400"></span>
         </div>
         <button id="modal-close"
@@ -277,6 +266,28 @@
       <p class="text-white/70 text-xs mt-1">Buscando en múltiples fuentes (8–15 s)</p>
     </div>
   </div>
+
+  <!-- ── Nav móvil ────────────────────────────────────────────────────────── -->
+  <nav id="mobile-tabs"
+       class="fixed bottom-0 left-0 right-0 bg-white border-t border-brand-border z-20">
+    <button id="tab-news"
+            class="flex-1 flex flex-col items-center py-2 gap-0.5 text-brand-primary transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v8a2 2 0 01-2 2z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20v-7H7v7M7 4v6h8"/>
+      </svg>
+      <span class="text-xs font-medium">Noticias</span>
+    </button>
+    <button id="tab-chat"
+            class="flex-1 flex flex-col items-center py-2 gap-0.5 text-gray-400 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+      </svg>
+      <span class="text-xs font-medium">Chat IA</span>
+    </button>
+  </nav>
 
   <script type="module" src="js/app.js"></script>
 </body>

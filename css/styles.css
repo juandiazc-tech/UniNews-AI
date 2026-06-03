@@ -71,6 +71,8 @@
 [data-theme="dark"] #search-banner    { background-color: #1A1A2E; border-color: #2D2D5E; }
 [data-theme="dark"] #search-banner span { color: #C0C0EE; }
 [data-theme="dark"] .search-strip     { background-color: #13132B; border-color: #2D2D5E; }
+[data-theme="dark"] #filter-keyword   { background-color: #1A1A2E; color: #E0E0FF; border-color: #2D2D5E; }
+[data-theme="dark"] #filter-keyword::placeholder { color: #5555AA; }
 
 /* Botón Actualizar — forzar bg porque Tailwind CDN no siempre aplica colores custom */
 #btn-scrape {
@@ -121,6 +123,71 @@
 [data-theme="dark"] #modal-box .border-t      { border-color: #2D2D5E; }
 [data-theme="dark"] #modal-close:hover        { background-color: #2D2D5E; color: #E0E0FF; }
 
+/* ── Pantalla de inicio ──────────────────────────────────────────────────── */
+.home-uni-card:hover {
+  border-color: #3300FF;
+  box-shadow: var(--shadow-md, 0 4px 16px rgba(51,0,255,0.18));
+  transform: translateY(-1px);
+}
+.home-uni-card { transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; }
+
+[data-theme="dark"] #home-screen          { background-color: #0F0F1A; }
+[data-theme="dark"] .home-uni-card        { background-color: #1A1A2E; border-color: #2D2D5E; }
+[data-theme="dark"] .home-uni-card h3     { color: #E0E0FF; }
+[data-theme="dark"] .home-uni-card p      { color: #6666AA; }
+[data-theme="dark"] .home-uni-card:hover  { border-color: #3300FF; }
+[data-theme="dark"] #home-screen p        { color: #6666AA; }
+
+/* ── Responsive — layout ────────────────────────────────────────────────── */
+
+/* Corrige la altura en iOS Safari (100vh incluye la barra del navegador) */
+@supports (height: 100dvh) {
+  body { height: 100dvh; }
+}
+
+/* Evita que los hijos flex se salgan del contenedor */
+#news-col, #chat-sidebar { min-height: 0; }
+
+/* ── Desktop ── */
+@media (min-width: 768px) {
+  #news-col     { width: 66.666%; }
+  #chat-sidebar { width: 33.333%; }
+  #mobile-tabs  { display: none !important; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 767px) {
+  #news-col     { width: 100%; flex: 1; }
+  #chat-sidebar { width: 100%; flex: 1; border-left: none; }
+
+  /* Solo un panel visible a la vez */
+  #news-col.mobile-hidden            { display: none; }
+  #chat-sidebar:not(.mobile-visible) { display: none; }
+
+  /* Espacio tab bar + notch iOS */
+  main { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Modal sube desde abajo */
+  .news-modal-box {
+    animation: modal-slide-up 0.22s cubic-bezier(0.34, 1.1, 0.64, 1);
+  }
+}
+
+@keyframes modal-slide-up {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Tab bar móvil ─────────────────────────────────────────────────────── */
+#mobile-tabs {
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+[data-theme="dark"] #mobile-tabs            { background-color: #13132B; border-color: #2D2D5E; }
+[data-theme="dark"] #mobile-tabs .text-gray-400 { color: #5555AA; }
+
+/* ── line-clamp via webkit (fallback) ───────────────────────────────────── */
 /* line-clamp via webkit (fallback) */
 .line-clamp-2 {
   display: -webkit-box;

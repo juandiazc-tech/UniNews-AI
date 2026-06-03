@@ -49,3 +49,14 @@ export async function sendChat(pregunta, universidad = '') {
   if (!data.ok) throw new Error(data.error || 'Error en el chat');
   return data.respuesta;
 }
+
+export async function fetchUniversidades() {
+  const res  = await fetch(`${BASE}/dai-universidades`);
+  const text = await res.text();
+  if (!text.trim()) return [];
+  let data;
+  try { data = JSON.parse(text); } catch { return []; }
+  if (Array.isArray(data)) return data;
+  if (!data.ok) return [];
+  return data.universidades || [];
+}
