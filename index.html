@@ -39,10 +39,13 @@
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- Chart.js (dashboard de métricas) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
   <!-- Custom styles -->
   <link rel="stylesheet" href="css/styles.css" />
 </head>
-<body class="bg-gray-50 text-brand-text font-primary flex flex-col overflow-hidden" style="height:100dvh;height:100vh">
+<body data-view="news" class="bg-gray-50 text-brand-text font-primary flex flex-col overflow-hidden" style="height:100dvh;height:100vh">
 
   <!-- ── Header ─────────────────────────────────────────────────────────── -->
   <header class="bg-white border-b border-brand-border px-3 sm:px-6 py-2 sm:py-3 flex items-center gap-2 sm:gap-4 shrink-0 z-10 shadow-brand-sm">
@@ -52,8 +55,25 @@
       <span class="font-bold text-brand-dark text-sm tracking-tight hidden sm:inline">UniNews AI</span>
     </a>
 
+    <!-- Toggle de vista (solo escritorio) -->
+    <div class="hidden sm:flex items-center gap-0.5 bg-brand-surface border border-brand-border rounded-lg p-0.5 shrink-0">
+      <button id="view-news" data-view-btn="news"
+              class="view-toggle-btn text-xs font-semibold px-3 py-1 rounded-md transition-colors">
+        Noticias
+      </button>
+      <button id="view-dashboard" data-view-btn="dashboard"
+              class="view-toggle-btn text-xs font-semibold px-3 py-1 rounded-md transition-colors">
+        Dashboard
+      </button>
+    </div>
+
     <!-- Filtros -->
     <div class="flex items-center gap-2 sm:gap-3 flex-1 flex-wrap min-w-0">
+      <select id="filter-universidad"
+              class="text-xs sm:text-sm border border-brand-border rounded-lg px-2 sm:px-3 py-1.5 bg-white text-brand-text font-accent focus:outline-none focus:ring-2 focus:ring-brand-primary max-w-[160px] sm:max-w-[220px]">
+        <option value="">Todas las universidades</option>
+      </select>
+
       <select id="filter-categoria"
               class="text-xs sm:text-sm border border-brand-border rounded-lg px-2 sm:px-3 py-1.5 bg-white text-brand-text font-accent focus:outline-none focus:ring-2 focus:ring-brand-primary">
         <option value="">Todas las categorías</option>
@@ -193,6 +213,50 @@
         </button>
       </form>
     </aside>
+
+    <!-- ── Vista Dashboard ──────────────────────────────────────────────── -->
+    <section id="dashboard-view" class="overflow-y-auto p-3 sm:p-6 bg-gray-50">
+
+      <!-- KPIs -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div class="dash-card">
+          <p class="dash-kpi-label">Total noticias</p>
+          <p id="kpi-total" class="dash-kpi-value">—</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-kpi-label">Universidades</p>
+          <p id="kpi-unis" class="dash-kpi-value">—</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-kpi-label">Últimos 7 días</p>
+          <p id="kpi-7d" class="dash-kpi-value">—</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-kpi-label">Relevancia alta</p>
+          <p id="kpi-alta" class="dash-kpi-value">—</p>
+        </div>
+      </div>
+
+      <!-- Gráficas -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        <div class="dash-card">
+          <h3 class="dash-chart-title">Noticias por día</h3>
+          <div class="dash-chart-box"><canvas id="chart-timeline"></canvas></div>
+        </div>
+        <div class="dash-card">
+          <h3 class="dash-chart-title">Top universidades</h3>
+          <div class="dash-chart-box"><canvas id="chart-unis"></canvas></div>
+        </div>
+        <div class="dash-card">
+          <h3 class="dash-chart-title">Por categoría</h3>
+          <div class="dash-chart-box"><canvas id="chart-category"></canvas></div>
+        </div>
+        <div class="dash-card">
+          <h3 class="dash-chart-title">Por relevancia</h3>
+          <div class="dash-chart-box"><canvas id="chart-relevance"></canvas></div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- ── Modal de noticia ──────────────────────────────────────────────────── -->
@@ -278,6 +342,14 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20v-7H7v7M7 4v6h8"/>
       </svg>
       <span class="text-xs font-medium">Noticias</span>
+    </button>
+    <button id="tab-dashboard"
+            class="flex-1 flex flex-col items-center py-2 gap-0.5 text-gray-400 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 3v18h18M9 17V9m4 8V5m4 12v-6"/>
+      </svg>
+      <span class="text-xs font-medium">Métricas</span>
     </button>
     <button id="tab-chat"
             class="flex-1 flex flex-col items-center py-2 gap-0.5 text-gray-400 transition-colors">

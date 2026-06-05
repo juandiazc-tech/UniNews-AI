@@ -187,6 +187,53 @@
 [data-theme="dark"] #mobile-tabs            { background-color: #13132B; border-color: #2D2D5E; }
 [data-theme="dark"] #mobile-tabs .text-gray-400 { color: #5555AA; }
 
+/* ── Dashboard / vista de métricas ──────────────────────────────────────── */
+
+/* Switch de vistas (controlado por body[data-view]) */
+#dashboard-view { display: none; }
+body[data-view="dashboard"] #dashboard-view { display: block; flex: 1; }
+body[data-view="dashboard"] #news-col     { display: none !important; }
+body[data-view="dashboard"] #chat-sidebar { display: none !important; }
+
+/* Toggle de escritorio */
+.view-toggle-btn { color: #64748b; }
+.view-toggle-btn:hover { color: var(--color-primary, #3300FF); }
+body[data-view="news"]      [data-view-btn="news"],
+body[data-view="dashboard"] [data-view-btn="dashboard"] {
+  background: #fff;
+  color: var(--color-primary, #3300FF);
+  box-shadow: 0 1px 3px rgba(51,0,255,0.12);
+}
+
+/* Tarjetas */
+.dash-card {
+  background: #fff;
+  border: 1px solid var(--color-border, #C8C8FF);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(51,0,255,0.06);
+}
+.dash-kpi-label  { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+.dash-kpi-value  { font-size: 1.75rem; line-height: 1.1; font-weight: 800; color: var(--color-primary, #3300FF); margin-top: 0.25rem; }
+.dash-chart-title { font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 0.75rem; }
+.dash-chart-box  { position: relative; height: 240px; }
+
+@media (min-width: 768px) {
+  .dash-chart-box { height: 280px; }
+}
+
+/* Dark mode */
+[data-theme="dark"] #dashboard-view { background-color: #0F0F1A; }
+[data-theme="dark"] .dash-card      { background-color: #1A1A2E; border-color: #2D2D5E; box-shadow: none; }
+[data-theme="dark"] .dash-kpi-label { color: #6666AA; }
+[data-theme="dark"] .dash-kpi-value { color: #A0A0FF; }
+[data-theme="dark"] .dash-chart-title { color: #C0C0EE; }
+[data-theme="dark"] .view-toggle-btn { color: #8888BB; }
+[data-theme="dark"] body[data-view="news"]      [data-view-btn="news"],
+[data-theme="dark"] body[data-view="dashboard"] [data-view-btn="dashboard"] {
+  background: #1A1A2E; color: #A0A0FF; box-shadow: none;
+}
+
 /* ── line-clamp via webkit (fallback) ───────────────────────────────────── */
 /* line-clamp via webkit (fallback) */
 .line-clamp-2 {

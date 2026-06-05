@@ -1,13 +1,16 @@
-import { fetchNoticias, triggerScrape, sendChat, searchUniversity } from './api.js';
+import { fetchNoticias, triggerScrape, sendChat, searchUniversity, fetchUniversidades } from './api.js';
+import { renderDashboard } from './dashboard.js';
 
 // ── Estado ────────────────────────────────────────────────────────────────────
-let allNoticias   = [];
+let allNoticias      = [];
+let allUniversidades = [];
 let searchResults = null;   // null = modo normal; array = resultados de /uninews-search
 let searchMeta    = null;   // { universidad, total }
 let searchLoading = false;
 let filters       = { categoria: '', universidad: '', keyword: '' };
 let chatHistory   = [];
 let chatLoading   = false;
+let currentView   = 'news';   // 'news' | 'dashboard'
 const noticiaMap  = new Map();
 
 // ── Colores (hex exactos según guía de producción) ────────────────────────
@@ -41,6 +44,17 @@ function getVisibleNoticias() {
       t => (t || '').toLowerCase().includes(kw)
     ))
   );
+}
+
+// ── Vista (Noticias / Dashboard) ───────────────────────────────────────────────
+function setView(view) {
+  currentView = view;
+  document.body.dataset.view = view;
+  if (view === 'dashboard') renderDashboard(getVisibleNoticias());
+}
+
+function refreshDashboardIfVisible() {
+  if (currentView === 'dashboard') renderDashboard(getVisibleNoticias());
 }
 
 function formatDate(dateStr) {
@@ -123,12 +137,15 @@ function renderCards() {
         </svg>
         <p class="text-sm">No hay noticias con estos filtros</p>
       </div>`;
+    refreshDashboardIfVisible();
     return;
   }
 
   noticiaMap.clear();
   visible.forEach(n => noticiaMap.set(cardId(n), n));
   panel.innerHTML = visible.map(renderCard).join('');
+
+  refreshDashboardIfVisible();
 }
 
 // ── Modal de noticia ──────────────────────────────────────────────────────────
@@ -178,6 +195,32 @@ function openModal(n) {
 
 function closeModal() {
   document.getElementById('news-modal').classList.add('hidden');
+}
+
+// ── Carga de universidades ────────────────────────────────────────────────────
+async function loadUniversidades() {
+  try {
+    allUniversidades = await fetchUniversidades();
+    populateUniversidadSelect();
+  } catch {
+    // falla silenciosa; el select queda vacío
+  }
+}
+
+function populateUniversidadSelect() {
+  const select = document.getElementById('filter-universidad');
+  if (!select) return;
+  const prev = select.value;
+  select.innerHTML = '<option value="">Todas las universidades</option>';
+  allUniversidades
+    .filter(u => u.total_noticias > 0)
+    .forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.nombre;
+      opt.textContent = u.nombre;
+      select.appendChild(opt);
+    });
+  if (prev) select.value = prev;
 }
 
 // ── Carga de noticias ─────────────────────────────────────────────────────────
@@ -252,17 +295,25 @@ function clearSearch() {
 }
 
 // ── Scraping ──────────────────────────────────────────────────────────────────
+const SCRAPE_KEY = {
+  'Corporación Unificada Nacional':    'CUN',
+  'UNAD':                              'UNAD',
+  'EAFIT':                             'EAFIT',
+  'Observatorio Universitario Colombia': 'Observatorio',
+};
+
 async function handleScrape() {
   const btn     = document.getElementById('btn-scrape');
   const overlay = document.getElementById('scrape-overlay');
   const label   = document.getElementById('scrape-universidad');
 
-  label.textContent = 'todas las universidades';
+  const uniKey = SCRAPE_KEY[filters.universidad] || '';
+  label.textContent = filters.universidad || 'todas las universidades';
   btn.disabled = true;
   overlay.classList.remove('hidden');
 
   try {
-    await triggerScrape('');
+    await triggerScrape(uniKey);
     await loadNoticias();
   } catch (err) {
     alert(`Error al actualizar: ${err.message}`);
@@ -274,7 +325,9 @@ async function handleScrape() {
 
 // ── Filtros ───────────────────────────────────────────────────────────────────
 function handleFilterChange() {
-  filters.categoria = document.getElementById('filter-categoria').value;
+  filters.categoria   = document.getElementById('filter-categoria').value;
+  filters.universidad = document.getElementById('filter-universidad').value;
+  updateChatUniLabel();
   renderCards();
 }
 
@@ -340,6 +393,18 @@ async function handleChatSubmit() {
   }
 }
 
+// ── Chat uni label ────────────────────────────────────────────────────────────
+function updateChatUniLabel() {
+  const label = document.getElementById('chat-uni-label');
+  if (!label) return;
+  if (filters.universidad) {
+    label.textContent = filters.universidad;
+    label.classList.remove('hidden');
+  } else {
+    label.classList.add('hidden');
+  }
+}
+
 // ── Dark mode ─────────────────────────────────────────────────────────────────
 function applyTheme(dark) {
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
@@ -360,11 +425,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     localStorage.setItem('theme', isDark ? 'light' : 'dark');
     applyTheme(!isDark);
+    refreshDashboardIfVisible();
   });
 
   document.getElementById('btn-scrape').addEventListener('click', handleScrape);
   document.getElementById('search-form').addEventListener('submit', handleSearch);
   document.getElementById('btn-clear-search').addEventListener('click', clearSearch);
+  document.getElementById('filter-universidad').addEventListener('change', handleFilterChange);
   document.getElementById('filter-categoria').addEventListener('change', handleFilterChange);
 
   // Filtro de texto local
@@ -414,26 +481,42 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Escape') closeModal();
   });
 
+  // ── Toggle de vista en escritorio ───────────────────────────────────────────
+  document.getElementById('view-news').addEventListener('click', () => setView('news'));
+  document.getElementById('view-dashboard').addEventListener('click', () => setView('dashboard'));
+
   // ── Tabs móvil ────────────────────────────────────────────────────────────
-  const tabNews     = document.getElementById('tab-news');
-  const tabChat     = document.getElementById('tab-chat');
-  const newsCol     = document.getElementById('news-col');
-  const chatSidebar = document.getElementById('chat-sidebar');
+  const tabNews      = document.getElementById('tab-news');
+  const tabChat      = document.getElementById('tab-chat');
+  const tabDashboard = document.getElementById('tab-dashboard');
+  const newsCol      = document.getElementById('news-col');
+  const chatSidebar  = document.getElementById('chat-sidebar');
 
   function setMobileTab(tab) {
-    const isNews = tab === 'news';
-    newsCol.classList.toggle('mobile-hidden', !isNews);
-    chatSidebar.classList.toggle('mobile-visible', !isNews);
-    tabNews.classList.toggle('text-brand-primary', isNews);
-    tabNews.classList.toggle('text-gray-400', !isNews);
-    tabChat.classList.toggle('text-brand-primary', !isNews);
-    tabChat.classList.toggle('text-gray-400', isNews);
-    if (!isNews) document.getElementById('chat-input')?.focus();
+    // tab: 'news' | 'chat' | 'dashboard'
+    if (tab === 'dashboard') {
+      setView('dashboard');
+    } else {
+      setView('news');
+      const isNews = tab === 'news';
+      newsCol.classList.toggle('mobile-hidden', !isNews);
+      chatSidebar.classList.toggle('mobile-visible', !isNews);
+      if (!isNews) document.getElementById('chat-input')?.focus();
+    }
+
+    const tabs = { news: tabNews, chat: tabChat, dashboard: tabDashboard };
+    Object.entries(tabs).forEach(([key, btn]) => {
+      const active = key === tab;
+      btn.classList.toggle('text-brand-primary', active);
+      btn.classList.toggle('text-gray-400', !active);
+    });
   }
 
   tabNews.addEventListener('click', () => setMobileTab('news'));
   tabChat.addEventListener('click', () => setMobileTab('chat'));
+  tabDashboard.addEventListener('click', () => setMobileTab('dashboard'));
 
+  loadUniversidades();
   loadNoticias();
 
   renderChat();
